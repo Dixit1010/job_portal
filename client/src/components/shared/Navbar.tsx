@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { UserButton, SignInButton, SignUpButton, useUser } from "@clerk/nextjs";
+import { UserButton, useUser } from "@clerk/nextjs";
 import { ThemeToggle } from "./ThemeToggle";
 import { Notifications } from "./Notifications";
 import { Button } from "@/components/ui/button";
@@ -9,6 +9,8 @@ import { Briefcase } from "lucide-react";
 
 export function Navbar() {
   const { user, isLoaded } = useUser();
+  const role = String(user?.publicMetadata?.role || user?.unsafeMetadata?.role || "").toLowerCase();
+  const isEmployer = role === "employer" || role === "employer_pro";
 
   return (
     <nav className="sticky top-0 z-50 w-full border-b bg-background/80 backdrop-blur-md">
@@ -35,19 +37,19 @@ export function Navbar() {
           
           {isLoaded && user ? (
             <div className="flex items-center gap-4">
-              <Link href={user?.publicMetadata?.role === "EMPLOYER" ? "/employer/dashboard" : "/dashboard"}>
+              <Link href={isEmployer ? "/employer/dashboard" : "/dashboard"}>
                 <Button variant="ghost">Dashboard</Button>
               </Link>
               <UserButton />
             </div>
           ) : isLoaded && !user ? (
             <div className="flex items-center gap-2">
-              <SignInButton mode="modal">
+              <Link href="/sign-in">
                 <Button variant="ghost">Log in</Button>
-              </SignInButton>
-              <SignUpButton mode="modal">
+              </Link>
+              <Link href="/sign-up">
                 <Button>Sign Up</Button>
-              </SignUpButton>
+              </Link>
             </div>
           ) : null}
         </div>

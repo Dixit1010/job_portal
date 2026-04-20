@@ -2,7 +2,47 @@
 
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { ThemeProvider as NextThemesProvider } from "next-themes";
-import { useState } from "react";
+import { useEffect, useState } from "react";
+import { useAuth, useUser } from "@clerk/nextjs";
+import api from "@/services/api";
+
+function ClerkUserSync() {
+  const { isSignedIn, getToken } = useAuth();
+  const { user } = useUser();
+  const [hasSynced, setHasSynced] = useState(false);
+
+  useEffect(() => {
+    const sync = async () => {
+      if (!isSignedIn || !user || hasSynced) return;
+      try {
+        const token = await getToken();
+        if (!token) return;
+        const metadataRole =
+          String(user.publicMetadata?.role || user.unsafeMetadata?.role || "").trim();
+
+        await api.post(
+          "/user/clerk/sync",
+          {
+            role: metadataRole,
+          },
+          {
+            headers: {
+              Authorization: `Bearer ${token}`,
+            },
+          }
+        );
+        setHasSynced(true);
+      } catch (error) {
+        // Keep non-blocking UX even if sync request fails.
+        console.error("Failed to sync Clerk user:", error);
+      }
+    };
+
+    sync();
+  }, [getToken, hasSynced, isSignedIn, user]);
+
+  return null;
+}
 
 export function Providers({ children }: { children: React.ReactNode }) {
   const [queryClient] = useState(
@@ -23,7 +63,10 @@ export function Providers({ children }: { children: React.ReactNode }) {
       enableSystem
       disableTransitionOnChange
     >
-      <QueryClientProvider client={queryClient}>{children}</QueryClientProvider>
+      <QueryClientProvider client={queryClient}>
+        <ClerkUserSync />
+        {children}
+      </QueryClientProvider>
     </NextThemesProvider>
   );
 }

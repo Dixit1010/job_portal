@@ -1,12 +1,11 @@
 import { catchAsyncErrors } from "../middlewares/catchAsyncError.js";
 import { sendToken } from "../utils/jwtToken.js";
-import { registerUserService, loginUserService } from "../services/user.service.js";
+import { registerUserService, loginUserService, syncClerkUserService } from "../services/user.service.js";
 import { sendEmailService } from "../services/email.service.js";
 
 export const register = catchAsyncErrors(async (req, res, next) => {
   const user = await registerUserService(req.body);
-  
-  // Background email sending
+
   sendEmailService({
     to: user.email,
     subject: "Welcome to JobZee!",
@@ -37,11 +36,28 @@ export const logout = catchAsyncErrors(async (req, res, next) => {
     });
 });
 
-
 export const getUser = catchAsyncErrors((req, res, next) => {
   const user = req.user;
   res.status(200).json({
     success: true,
     user,
   });
+});
+
+// Syncs a Clerk user with our DB and issues a JWT cookie so profile
+// endpoints (which use isAuthenticatedFlex) work immediately after sync.
+export const syncClerkUser = catchAsyncErrors(async (req, res) => {
+  const { sub, email, name, given_name, family_name, public_metadata, unsafe_metadata, metadata } = req.clerkAuth;
+  const fullName = name || [given_name, family_name].filter(Boolean).join(" ").trim();
+  const roleFromToken =
+    public_metadata?.role || unsafe_metadata?.role || metadata?.role || req.body?.role;
+
+  const user = await syncClerkUserService({
+    clerkId: sub,
+    email,
+    name: fullName,
+    role: roleFromToken,
+  });
+
+  sendToken(user, 200, res, "Clerk user synced successfully");
 });

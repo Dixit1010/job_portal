@@ -36,8 +36,8 @@ app.use(morgan("dev"));
 
 app.use(
   cors({
-    origin: [process.env.FRONTEND_URL],
-    method: ["GET", "POST", "DELETE", "PUT"],
+    origin: [process.env.FRONTEND_URL, "http://localhost:3000"].filter(Boolean),
+    methods: ["GET", "POST", "DELETE", "PUT"],
     credentials: true,
   })
 );

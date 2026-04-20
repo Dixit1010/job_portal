@@ -2,7 +2,39 @@ import mongoose from "mongoose";
 import validator from "validator";
 import bcrypt from "bcrypt";
 import jwt from "jsonwebtoken";
+
+const experienceSchema = new mongoose.Schema(
+  {
+    title: { type: String, trim: true },
+    company: { type: String, trim: true },
+    startDate: { type: Date },
+    endDate: { type: Date },
+    current: { type: Boolean, default: false },
+    description: { type: String, trim: true },
+  },
+  { _id: true }
+);
+
+const educationSchema = new mongoose.Schema(
+  {
+    degree: { type: String, trim: true },
+    institution: { type: String, trim: true },
+    year: { type: Number },
+  },
+  { _id: true }
+);
+
 const userSchema = new mongoose.Schema({
+  authProvider: {
+    type: String,
+    enum: ["local", "clerk"],
+    default: "local",
+  },
+  clerkId: {
+    type: String,
+    unique: true,
+    sparse: true,
+  },
   name: {
     type: String,
     required: [true, "Please enter your Name!"],
@@ -16,11 +48,15 @@ const userSchema = new mongoose.Schema({
   },
   phone: {
     type: Number,
-    required: [true, "Please enter your Phone Number!"],
+    required: function () {
+      return this.authProvider === "local";
+    },
   },
   password: {
     type: String,
-    required: [true, "Please provide a Password!"],
+    required: function () {
+      return this.authProvider === "local";
+    },
     minLength: [8, "Password must contain at least 8 characters!"],
     maxLength: [32, "Password cannot exceed 32 characters!"],
     select: false,
@@ -29,34 +65,46 @@ const userSchema = new mongoose.Schema({
     type: String,
     required: [true, "Please select a role"],
     enum: ["Job Seeker", "Employer"],
+    default: "Job Seeker",
   },
   savedJobs: [
     {
       type: mongoose.Schema.ObjectId,
       ref: "Job",
-    }
+    },
   ],
+  // Profile fields
+  location: { type: String, default: "", trim: true },
+  headline: { type: String, default: "", trim: true, maxLength: 120 },
+  bio: { type: String, default: "", trim: true, maxLength: 1000 },
+  skills: { type: [String], default: [] },
+  experience: { type: [experienceSchema], default: [] },
+  education: { type: [educationSchema], default: [] },
+  // Resume stored on Cloudinary
+  resumeUrl: { type: String, default: "" },
+  resumePublicId: { type: String, default: "" },
+  resumeFileName: { type: String, default: "" },
+  resumeUploadedAt: { type: Date, default: null },
+  // Metadata
+  profileCompleted: { type: Number, default: 0, min: 0, max: 100 },
+  lastActive: { type: Date, default: Date.now },
   createdAt: {
     type: Date,
     default: Date.now,
   },
 });
 
-
-//ENCRYPTING THE PASSWORD WHEN THE USER REGISTERS OR MODIFIES HIS PASSWORD
 userSchema.pre("save", async function (next) {
-  if (!this.isModified("password")) {
+  if (!this.password || !this.isModified("password")) {
     next();
   }
   this.password = await bcrypt.hash(this.password, 10);
 });
 
-//COMPARING THE USER PASSWORD ENTERED BY USER WITH THE USER SAVED PASSWORD
 userSchema.methods.comparePassword = async function (enteredPassword) {
   return await bcrypt.compare(enteredPassword, this.password);
 };
 
-//GENERATING A JWT TOKEN WHEN A USER REGISTERS OR LOGINS, IT DEPENDS ON OUR CODE THAT WHEN DO WE NEED TO GENERATE THE JWT TOKEN WHEN THE USER LOGIN OR REGISTER OR FOR BOTH. 
 userSchema.methods.getJWTToken = function () {
   return jwt.sign({ id: this._id }, process.env.JWT_SECRET_KEY, {
     expiresIn: process.env.JWT_EXPIRES_IN,

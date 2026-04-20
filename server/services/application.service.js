@@ -24,7 +24,7 @@ export const postApplicationService = async (applicationData, resumeFile, userId
 
   const { jobId, ...restData } = applicationData;
   const applicantID = { user: userId, role: "Job Seeker" };
-  
+
   const jobDetails = await Job.findById(jobId).lean();
   if (!jobDetails) {
     throw new ErrorHandler("Job not found!", 404);
@@ -36,6 +36,7 @@ export const postApplicationService = async (applicationData, resumeFile, userId
     ...restData,
     applicantID,
     employerID,
+    job: jobId,
     resume: {
       public_id: cloudinaryResponse.public_id,
       url: cloudinaryResponse.secure_url,
@@ -49,14 +50,19 @@ export const employerGetAllApplicationsService = async (userId, role) => {
   if (role === "Job Seeker") {
     throw new ErrorHandler("Job Seeker not allowed to access this resource.", 400);
   }
-  return await Application.find({ "employerID.user": userId }).lean();
+  return await Application.find({ "employerID.user": userId })
+    .populate({ path: "job", select: "title city country" })
+    .lean();
 };
 
 export const jobseekerGetAllApplicationsService = async (userId, role) => {
   if (role === "Employer") {
     throw new ErrorHandler("Employer not allowed to access this resource.", 400);
   }
-  return await Application.find({ "applicantID.user": userId }).lean();
+  return await Application.find({ "applicantID.user": userId })
+    .populate({ path: "job", select: "title city country category" })
+    .sort({ createdAt: -1 })
+    .lean();
 };
 
 export const jobseekerDeleteApplicationService = async (applicationId, role) => {
@@ -79,13 +85,13 @@ export const updateApplicationStatusService = async (applicationId, status, role
   if (!validStatuses.includes(status)) {
     throw new ErrorHandler("Invalid application status.", 400);
   }
-  
+
   const application = await Application.findByIdAndUpdate(
-    applicationId, 
-    { status }, 
+    applicationId,
+    { status },
     { new: true, runValidators: true }
   );
-  
+
   if (!application) {
     throw new ErrorHandler("Application not found!", 404);
   }

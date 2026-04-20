@@ -3,7 +3,7 @@
 import { useState, useRef, useEffect } from "react";
 import { Bell } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { useAuthStore } from "@/store/useAuthStore";
+import { useAuth } from "@clerk/nextjs";
 
 const MOCK_NOTIFICATIONS = [
   { id: 1, text: "Your application for Senior Frontend Engineer was viewed.", time: "2m ago", unread: true },
@@ -13,7 +13,7 @@ const MOCK_NOTIFICATIONS = [
 
 export function Notifications() {
   const [open, setOpen] = useState(false);
-  const { isAuthenticated } = useAuthStore();
+  const { isSignedIn } = useAuth();
   const dropdownRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -28,7 +28,7 @@ export function Notifications() {
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, [open]);
 
-  if (!isAuthenticated) return null;
+  if (!isSignedIn) return null;
 
   const unreadCount = MOCK_NOTIFICATIONS.filter(n => n.unread).length;
 
