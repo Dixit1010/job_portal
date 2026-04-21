@@ -8,7 +8,7 @@ import {
   updateJob,
   getJobMatchScore
 } from "../controllers/jobController.js";
-import { isAuthenticatedFlexFlex } from "../middlewares/auth.js";
+import { isAuthenticatedFlex } from "../middlewares/auth.js";
 import { validateRequest } from "../middlewares/validate.js";
 import { jobSchema } from "../validations/job.schema.js";
 
