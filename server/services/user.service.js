@@ -58,16 +58,11 @@ export const syncClerkUserService = async (clerkData) => {
     return user;
   }
 
-  const generatedPassword = `clerk_${clerkId}_${Date.now()}`;
-  const fallbackPhone = 1000000000;
-
   user = await User.create({
     authProvider: "clerk",
     clerkId,
     name: name || "Clerk User",
     email,
-    phone: fallbackPhone,
-    password: generatedPassword,
     role: safeRole,
   });
 

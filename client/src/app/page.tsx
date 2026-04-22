@@ -287,6 +287,7 @@ export default function Home() {
               </div>
               <span>Trusted by 50,000+ professionals</span>
             </motion.div>
+
           </motion.div>
         </div>
       </section>

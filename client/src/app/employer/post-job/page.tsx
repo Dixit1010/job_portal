@@ -10,6 +10,7 @@ import { CopyPlus, ArrowLeft, Loader2 } from "lucide-react";
 import Link from "next/link";
 import api from "@/services/api";
 import axios from "axios";
+import { useAuth } from "@clerk/nextjs";
 
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -31,6 +32,7 @@ type PostJobValues = z.infer<typeof postJobSchema>;
 export default function PostJobPage() {
   const [isLoading, setIsLoading] = useState(false);
   const router = useRouter();
+  const { getToken } = useAuth();
 
   const {
     register,
@@ -43,10 +45,13 @@ export default function PostJobPage() {
   const onSubmit = async (data: PostJobValues) => {
     setIsLoading(true);
     try {
+      const token = await getToken();
       await api.post("/job/post", {
         ...data,
         salaryFrom: Number(data.salaryFrom),
-        salaryTo: Number(data.salaryTo)
+        salaryTo: Number(data.salaryTo),
+      }, {
+        headers: token ? { Authorization: `Bearer ${token}` } : {},
       });
       router.push("/employer/dashboard");
     } catch (error: unknown) {

@@ -1,4 +1,4 @@
-import { Mail, MapPin, MessageSquare } from "lucide-react";
+import { Mail, MessageSquare } from "lucide-react";
 
 export default function ContactPage() {
   return (
@@ -23,13 +23,6 @@ export default function ContactPage() {
               <div>
                 <h3 className="font-medium text-foreground">Live Chat</h3>
                 <p className="text-muted-foreground text-sm mt-1">Available 9am - 5pm EST</p>
-              </div>
-            </div>
-            <div className="flex items-start">
-              <MapPin className="h-6 w-6 text-primary mr-4 mt-1" />
-              <div>
-                <h3 className="font-medium text-foreground">Headquarters</h3>
-                <p className="text-muted-foreground text-sm mt-1">123 Workflow Ave, Suite 400<br/>San Francisco, CA 94103</p>
               </div>
             </div>
           </div>

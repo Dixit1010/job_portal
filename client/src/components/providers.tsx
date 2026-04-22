@@ -19,11 +19,18 @@ function ClerkUserSync() {
         if (!token) return;
         const metadataRole =
           String(user.publicMetadata?.role || user.unsafeMetadata?.role || "").trim();
+        const email = user.emailAddresses?.[0]?.emailAddress ?? "";
+        const name =
+          user.fullName ||
+          `${user.firstName ?? ""} ${user.lastName ?? ""}`.trim() ||
+          "Clerk User";
 
         await api.post(
           "/user/clerk/sync",
           {
             role: metadataRole,
+            email,
+            name,
           },
           {
             headers: {

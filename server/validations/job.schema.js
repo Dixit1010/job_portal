@@ -7,9 +7,9 @@ export const jobSchema = z.object({
   country: z.string().min(1, "Country is required."),
   city: z.string().min(1, "City is required."),
   location: z.string().min(1, "Location is required."),
-  fixedSalary: z.preprocess((val) => Number(val), z.number().optional()),
-  salaryFrom: z.preprocess((val) => Number(val), z.number().optional()),
-  salaryTo: z.preprocess((val) => Number(val), z.number().optional()),
+  fixedSalary: z.preprocess((val) => (val === undefined || val === null || val === "") ? undefined : Number(val), z.number().positive().optional()),
+  salaryFrom: z.preprocess((val) => (val === undefined || val === null || val === "") ? undefined : Number(val), z.number().positive().optional()),
+  salaryTo: z.preprocess((val) => (val === undefined || val === null || val === "") ? undefined : Number(val), z.number().positive().optional()),
 }).refine(data => {
   if (data.fixedSalary || (data.salaryFrom && data.salaryTo)) {
     return true;

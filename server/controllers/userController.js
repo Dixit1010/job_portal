@@ -48,13 +48,18 @@ export const getUser = catchAsyncErrors((req, res, next) => {
 // endpoints (which use isAuthenticatedFlex) work immediately after sync.
 export const syncClerkUser = catchAsyncErrors(async (req, res) => {
   const { sub, email, name, given_name, family_name, public_metadata, unsafe_metadata, metadata } = req.clerkAuth;
-  const fullName = name || [given_name, family_name].filter(Boolean).join(" ").trim();
+  const fullName =
+    name ||
+    [given_name, family_name].filter(Boolean).join(" ").trim() ||
+    req.body?.name ||
+    "Clerk User";
+  const resolvedEmail = email || req.body?.email;
   const roleFromToken =
     public_metadata?.role || unsafe_metadata?.role || metadata?.role || req.body?.role;
 
   const user = await syncClerkUserService({
     clerkId: sub,
-    email,
+    email: resolvedEmail,
     name: fullName,
     role: roleFromToken,
   });

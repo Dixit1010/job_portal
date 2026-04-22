@@ -2,10 +2,11 @@
 
 import { useEffect, useState } from "react";
 import { motion } from "framer-motion";
-import { Plus, Users, Eye, Briefcase, TrendingUp, MoreVertical, Edit, Trash2, Loader2 } from "lucide-react";
+import { Plus, Users, MoreVertical, Edit, Trash2, Loader2 } from "lucide-react";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import api from "@/services/api";
+import { useAuth } from "@clerk/nextjs";
 
 type PostedJob = {
   _id: string;
@@ -14,22 +15,21 @@ type PostedJob = {
   jobPostedOn?: string;
 };
 
-const MOCK_METRICS = [
-  { title: "Active Jobs", value: "3", change: "+1", trend: "up", icon: <Briefcase className="w-5 h-5" /> },
-  { title: "Total Views", value: "1,248", change: "+12%", trend: "up", icon: <Eye className="w-5 h-5" /> },
-  { title: "Applicants", value: "86", change: "+24", trend: "up", icon: <Users className="w-5 h-5" /> },
-];
 
 export default function EmployerDashboard() {
   const [postedJobs, setPostedJobs] = useState<PostedJob[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const { getToken } = useAuth();
 
   useEffect(() => {
     const fetchMyJobs = async () => {
       try {
-        const response = await api.get("/job/getmyjobs");
-        const data = response.data as { myjobs?: PostedJob[] };
-        if (data?.myjobs) setPostedJobs(data.myjobs);
+        const token = await getToken();
+        const response = await api.get("/job/getmyjobs", {
+          headers: token ? { Authorization: `Bearer ${token}` } : {},
+        });
+        const data = response.data as { myJobs?: PostedJob[] };
+        if (data?.myJobs) setPostedJobs(data.myJobs);
       } catch (error) {
         console.error("Failed to fetch employer jobs", error);
       } finally {
@@ -37,7 +37,7 @@ export default function EmployerDashboard() {
       }
     };
     fetchMyJobs();
-  }, []);
+  }, [getToken]);
   return (
     <div className="container mx-auto px-4 max-w-7xl py-8 min-h-screen">
       <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-8 gap-4">
@@ -54,30 +54,6 @@ export default function EmployerDashboard() {
             </Button>
           </Link>
         </motion.div>
-      </div>
-
-      <div className="grid md:grid-cols-3 gap-6 mb-10">
-        {MOCK_METRICS.map((metric, idx) => (
-          <motion.div
-            key={idx}
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: idx * 0.1 }}
-            className="bg-card border rounded-2xl p-6 shadow-sm flex items-center justify-between"
-          >
-            <div>
-              <p className="text-sm font-medium text-muted-foreground mb-1">{metric.title}</p>
-              <h2 className="text-3xl font-bold">{metric.value}</h2>
-              <div className="flex items-center mt-2 text-sm text-green-500 font-medium tracking-tight">
-                <TrendingUp className="w-4 h-4 mr-1" />
-                {metric.change} this week
-              </div>
-            </div>
-            <div className="bg-primary/10 text-primary w-12 h-12 rounded-xl flex items-center justify-center">
-              {metric.icon}
-            </div>
-          </motion.div>
-        ))}
       </div>
 
       <motion.div
