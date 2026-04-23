@@ -5,9 +5,9 @@ import Link from "next/link";
 import { motion } from "framer-motion";
 import { Button } from "@/components/ui/button";
 import { ArrowRight, CheckCircle, Search, Briefcase, Users, Star, Mail } from "lucide-react";
-import { CompanyLogos } from "@/components/home/CompanyLogos";
+import { CompaniesMarquee } from "@/components/home/CompaniesMarquee";
 import { StatsCounter } from "@/components/home/StatsCounter";
-import { TestimonialsSection } from "@/components/home/TestimonialCard";
+import { TestimonialsMarquee } from "@/components/home/TestimonialsMarquee";
 import { HowItWorks } from "@/components/home/HowItWorks";
 
 import { FADE_IN_UP, STAGGER_CONTAINER } from "@/lib/animations";
@@ -293,7 +293,7 @@ export default function Home() {
       </section>
 
       {/* ── Company Logos ── */}
-      <CompanyLogos />
+      <CompaniesMarquee />
 
       {/* ── Stats ── */}
       <StatsCounter />
@@ -305,7 +305,7 @@ export default function Home() {
       <HowItWorks />
 
       {/* ── Testimonials ── */}
-      <TestimonialsSection />
+      <TestimonialsMarquee />
 
       {/* ── Email CTA ── */}
       <EmailCTA />
