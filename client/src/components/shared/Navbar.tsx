@@ -137,10 +137,17 @@ export function Navbar() {
 
   const toggleTheme = () => setTheme(isDark ? "light" : "dark");
 
+  const isHome = pathname === "/";
+
   return (
     <>
       <nav
-        className="sticky top-0 z-50 w-full border-b border-border/50 bg-background/80 backdrop-blur-md"
+        className={cn(
+          "sticky top-0 z-50 w-full border-b backdrop-blur-md transition-colors duration-300",
+          isHome
+            ? "border-white/10 bg-white/5"
+            : "border-border/50 bg-background/80"
+        )}
         role="navigation"
         aria-label="Main navigation"
       >

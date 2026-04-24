@@ -9,6 +9,7 @@ import { CompaniesMarquee } from "@/components/home/CompaniesMarquee";
 import { StatsCounter } from "@/components/home/StatsCounter";
 import { TestimonialsMarquee } from "@/components/home/TestimonialsMarquee";
 import { HowItWorks } from "@/components/home/HowItWorks";
+import { StarsBackground } from "@/components/home/StarsBackground";
 
 import { FADE_IN_UP, STAGGER_CONTAINER } from "@/lib/animations";
 
@@ -200,10 +201,10 @@ export default function Home() {
     <div className="flex flex-col min-h-screen">
       {/* ── Hero ── */}
       <section className="relative pt-32 pb-20 md:pt-48 md:pb-32 overflow-hidden">
-        <div className="absolute inset-0 -z-10 bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-primary/20 via-background to-background" />
+        <StarsBackground />
         <FloatingBlobs />
 
-        <div className="container mx-auto px-4 max-w-7xl">
+        <div className="container mx-auto px-4 max-w-7xl relative z-10">
           <motion.div
             initial="hidden"
             animate="visible"
