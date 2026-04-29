@@ -5,6 +5,7 @@ import {
   updateProfile,
   uploadResume,
   deleteResume,
+  toggleSaveJob,
 } from "../controllers/profileController.js";
 import { isAuthenticated, isClerkAuthenticated, isAuthenticatedFlex } from "../middlewares/auth.js";
 import { validateRequest } from "../middlewares/validate.js";
@@ -24,5 +25,6 @@ router.get("/profile", isAuthenticatedFlex, getProfile);
 router.put("/profile", isAuthenticatedFlex, validateRequest(profileUpdateSchema), updateProfile);
 router.post("/resume", isAuthenticatedFlex, uploadResume);
 router.delete("/resume", isAuthenticatedFlex, deleteResume);
+router.post("/saved-jobs/:jobId", isAuthenticatedFlex, toggleSaveJob);
 
 export default router;

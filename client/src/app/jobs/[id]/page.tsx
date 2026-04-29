@@ -1,136 +1,275 @@
 "use client";
 
+import { useParams, useRouter } from "next/navigation";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { motion } from "framer-motion";
-import { Bookmark, Building2, MapPin, DollarSign, Clock, CheckCircle2, Share2, CornerUpLeft } from "lucide-react";
+import {
+  Bookmark, BookmarkCheck, MapPin, DollarSign, Clock,
+  CornerUpLeft, Briefcase, AlertCircle, Loader2,
+} from "lucide-react";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { ReactNode } from "react";
-import { useParams } from "next/navigation";
+import api from "@/services/api";
+import type { Job } from "@/hooks/useJobs";
+import { useAuth } from "@clerk/nextjs";
 
-export default function JobDetailsPage() {
-  const params = useParams();
-  
+function formatSalary(job: Job): string {
+  if (job.fixedSalary) return `$${job.fixedSalary.toLocaleString()}`;
+  if (job.salaryFrom && job.salaryTo)
+    return `$${job.salaryFrom.toLocaleString()} – $${job.salaryTo.toLocaleString()}`;
+  return "Negotiable";
+}
+
+function timeAgo(dateStr: string): string {
+  const diff = Date.now() - new Date(dateStr).getTime();
+  const days = Math.floor(diff / 86_400_000);
+  if (days === 0) return "Today";
+  if (days === 1) return "Yesterday";
+  if (days < 30) return `${days} days ago`;
+  return `${Math.floor(days / 30)} months ago`;
+}
+
+const LOGO_COLORS = [
+  "bg-blue-500", "bg-violet-500", "bg-emerald-500",
+  "bg-orange-500", "bg-rose-500", "bg-cyan-500",
+];
+
+function pickColor(name: string): string {
+  let hash = 0;
+  for (let i = 0; i < name.length; i++) hash = (name.codePointAt(i) ?? 0) + ((hash << 5) - hash);
+  return LOGO_COLORS[Math.abs(hash) % LOGO_COLORS.length];
+}
+
+function Badge({ icon, text }: { readonly icon: ReactNode; readonly text: string }) {
   return (
-    <div className="container mx-auto px-4 max-w-5xl py-8 min-h-screen">
-      <Link href="/dashboard" className="inline-flex items-center text-sm font-medium text-muted-foreground hover:text-primary mb-6 transition-colors">
-        <CornerUpLeft className="w-4 h-4 mr-2" />
-        Back to search
-      </Link>
+    <div className="flex items-center text-sm font-medium bg-muted/50 text-muted-foreground px-3 py-1.5 rounded-lg border border-border/50">
+      {icon}
+      <span className="ml-2">{text}</span>
+    </div>
+  );
+}
 
-      <div className="grid md:grid-cols-3 gap-8">
-        
-        {/* Main Content */}
-        <div className="md:col-span-2 space-y-6">
-          <motion.div 
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            className="bg-card border rounded-3xl p-8 relative overflow-hidden"
-          >
-            <div className="absolute top-0 right-0 p-6 flex gap-3 z-10">
-              <Button variant="outline" size="icon" className="rounded-full shadow-sm hover:text-primary">
-                <Share2 className="w-4 h-4" />
-              </Button>
-              <Button variant="outline" size="icon" className="rounded-full shadow-sm hover:text-primary">
-                <Bookmark className="w-4 h-4" />
-              </Button>
+function SkeletonDetail() {
+  return (
+    <div className="grid md:grid-cols-3 gap-8 animate-pulse">
+      <div className="md:col-span-2 space-y-6">
+        <div className="bg-card border rounded-3xl p-8 space-y-6">
+          <div className="flex items-center gap-6">
+            <div className="w-20 h-20 bg-muted/60 rounded-2xl flex-shrink-0" />
+            <div className="space-y-3 flex-1">
+              <div className="h-7 bg-muted/60 rounded w-3/4" />
+              <div className="h-4 bg-muted/40 rounded w-1/3" />
             </div>
-
-            <div className="flex items-center gap-6 mb-8 relative z-0">
-              <div className="w-20 h-20 bg-blue-500 rounded-2xl flex items-center justify-center text-white text-3xl font-bold shadow-lg shadow-blue-500/20">
-                T
-              </div>
-              <div>
-                <h1 className="text-3xl md:text-4xl font-bold tracking-tighter mb-2 text-foreground">Senior Frontend Engineer</h1>
-                <div className="text-lg text-muted-foreground font-medium flex items-center">
-                  TechCorp Inc.
-                  <CheckCircle2 className="w-5 h-5 text-blue-500 ml-2" />
-                </div>
-              </div>
-            </div>
-
-            <div className="flex flex-wrap gap-4 mb-8 relative z-0">
-              <Badge icon={<MapPin className="w-4 h-4" />} text="San Francisco, CA" />
-              <Badge icon={<DollarSign className="w-4 h-4" />} text="$140k - $180k" />
-              <Badge icon={<Building2 className="w-4 h-4" />} text="Full-time" />
-              <Badge icon={<Clock className="w-4 h-4" />} text="Posted 2 days ago" />
-            </div>
-
-            <div className="prose dark:prose-invert max-w-none mt-10">
-              <h3 className="text-xl font-semibold tracking-tight text-foreground mb-4">About the Role</h3>
-              <p className="text-muted-foreground leading-relaxed text-base">
-                We are looking for an experienced Senior Frontend Engineer to join our core product team. 
-                You will be responsible for building scalable, high-performance web applications using React and Next.js. 
-                You will work closely with our design and backend teams to deliver exceptional user experiences.
-              </p>
-
-              <h3 className="text-xl font-semibold tracking-tight text-foreground mt-8 mb-4">Responsibilities</h3>
-              <ul className="text-muted-foreground space-y-2 list-disc pl-5">
-                <li>Architect and develop complex UI components using React and TypeScript.</li>
-                <li>Optimize application performance for maximum speed and scalability.</li>
-                <li>Collaborate with UX/UI designers to implement highly interactive designs.</li>
-                <li>Write clean, maintainable, and testable code.</li>
-              </ul>
-
-              <h3 className="text-xl font-semibold tracking-tight text-foreground mt-8 mb-4">Requirements</h3>
-              <ul className="text-muted-foreground space-y-2 list-disc pl-5">
-                <li>5+ years of experience in frontend development.</li>
-                <li>Deep understanding of React, Next.js, and modern CSS (Tailwind).</li>
-                <li>Strong proficiency in TypeScript and JavaScript optimization.</li>
-                <li>Experience with state management libraries (Zustand, Redux).</li>
-              </ul>
-            </div>
-          </motion.div>
+          </div>
+          <div className="flex gap-3">
+            {[100, 80, 90, 70].map((w) => (
+              <div key={w} className="h-8 bg-muted/40 rounded-lg" style={{ width: `${w}px` }} />
+            ))}
+          </div>
+          <div className="space-y-3 pt-4">
+            <div className="h-4 bg-muted/40 rounded w-full" />
+            <div className="h-4 bg-muted/40 rounded w-5/6" />
+            <div className="h-4 bg-muted/40 rounded w-4/6" />
+          </div>
         </div>
-
-        {/* Sidebar */}
-        <div className="md:col-span-1 space-y-6">
-          <motion.div 
-            initial={{ opacity: 0, x: 20 }}
-            animate={{ opacity: 1, x: 0 }}
-            transition={{ delay: 0.2 }}
-            className="bg-card border rounded-3xl p-6 sticky top-24"
-          >
-            {/* AI Match Score Mock */}
-            <div className="p-5 bg-gradient-to-br from-green-500/10 to-teal-500/5 rounded-2xl border border-green-500/20 mb-6 text-center shadow-sm">
-              <div className="text-4xl font-black text-green-600 dark:text-green-400 mb-1 tracking-tight">94%</div>
-              <div className="text-sm font-semibold text-green-700/80 dark:text-green-300">AI Resume Match</div>
-              <p className="text-xs text-muted-foreground mt-2 px-2 font-medium">Your skills heavily align with this role&apos;s requirements.</p>
-            </div>
-
-            <Button size="lg" className="w-full text-base font-semibold h-14 rounded-xl shadow-lg mb-4 hover:-translate-y-1 transition-transform">
-              Apply Now
-            </Button>
-            <Button size="lg" variant="outline" className="w-full text-base font-semibold h-14 rounded-xl mb-6">
-              Save Job
-            </Button>
-
-            <div className="pt-6 border-t text-sm space-y-4">
-              <div className="flex justify-between">
-                <span className="text-muted-foreground">Experience level</span>
-                <span className="font-medium">Mid-Senior level</span>
-              </div>
-              <div className="flex justify-between">
-                <span className="text-muted-foreground">Industry</span>
-                <span className="font-medium">Information Technology</span>
-              </div>
-              <div className="flex justify-between">
-                <span className="text-muted-foreground">Applicants</span>
-                <span className="font-medium">48 so far</span>
-              </div>
-            </div>
-          </motion.div>
+      </div>
+      <div className="md:col-span-1">
+        <div className="bg-card border rounded-3xl p-6 space-y-4">
+          <div className="h-14 bg-muted/40 rounded-xl" />
+          <div className="h-14 bg-muted/40 rounded-xl" />
+          <div className="pt-4 border-t space-y-3">
+            <div className="h-4 bg-muted/40 rounded w-full" />
+            <div className="h-4 bg-muted/40 rounded w-4/5" />
+          </div>
         </div>
-
       </div>
     </div>
   );
 }
 
-function Badge({ icon, text }: { icon: ReactNode, text: string }) {
+export default function JobDetailsPage() {
+  const { id } = useParams<{ id: string }>();
+  const router = useRouter();
+  const { getToken } = useAuth();
+  const queryClient = useQueryClient();
+
+  const authHeaders = async () => {
+    const token = await getToken();
+    return token ? { Authorization: `Bearer ${token}` } : {};
+  };
+
+  const { data: job, isLoading, isError } = useQuery({
+    queryKey: ["job", id],
+    queryFn: async () => {
+      const headers = await authHeaders();
+      const res = await api.get(`/job/${id}`, { headers });
+      return res.data.job as Job;
+    },
+    enabled: !!id,
+    retry: 1,
+  });
+
+  const { data: profile } = useQuery({
+    queryKey: ["profile"],
+    queryFn: async () => {
+      const headers = await authHeaders();
+      const res = await api.get("/user/profile", { headers });
+      return res.data.user as { savedJobs: { _id: string }[] };
+    },
+  });
+
+  const isSaved = profile?.savedJobs?.some((j) => j._id === id) ?? false;
+
+  const saveMutation = useMutation({
+    mutationFn: async () => {
+      const headers = await authHeaders();
+      const res = await api.post(`/user/saved-jobs/${id}`, {}, { headers });
+      return res.data as { saved: boolean };
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["profile"] });
+    },
+  });
+
+  const companyName = job && typeof job.postedBy === "object" ? job.postedBy.name : "Company";
+
+  let saveButtonIcon;
+  if (saveMutation.isPending) {
+    saveButtonIcon = <Loader2 className="w-4 h-4 animate-spin mr-2" />;
+  } else if (isSaved) {
+    saveButtonIcon = <BookmarkCheck className="w-4 h-4 mr-2" />;
+  } else {
+    saveButtonIcon = <Bookmark className="w-4 h-4 mr-2" />;
+  }
+
   return (
-    <div className="flex items-center text-sm font-medium bg-muted/50 text-muted-foreground px-3 py-1.5 rounded-lg border border-border/50">
-      {icon}
-      <span className="ml-2">{text}</span>
+    <div className="container mx-auto px-4 max-w-5xl py-8 min-h-screen">
+      <button
+        onClick={() => router.back()}
+        className="inline-flex items-center text-sm font-medium text-muted-foreground hover:text-primary mb-6 transition-colors"
+      >
+        <CornerUpLeft className="w-4 h-4 mr-2" />
+        Back to search
+      </button>
+
+      {isLoading && <SkeletonDetail />}
+
+      {isError && (
+        <div className="bg-card border border-border/50 rounded-3xl p-16 text-center flex flex-col items-center gap-3">
+          <AlertCircle className="w-10 h-10 text-muted-foreground" />
+          <h2 className="text-lg font-semibold">Job not found</h2>
+          <p className="text-sm text-muted-foreground">This listing may have expired or been removed.</p>
+          <Link href="/jobs">
+            <Button variant="outline" className="mt-2">Browse all jobs</Button>
+          </Link>
+        </div>
+      )}
+
+      {!isLoading && !isError && job && (
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-5 md:gap-8">
+
+          {/* Main Content */}
+          <div className="md:col-span-2 space-y-6">
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              className="bg-card border rounded-3xl p-4 sm:p-6 md:p-8 relative overflow-hidden"
+            >
+              <div className="absolute top-0 right-0 p-6 z-10">
+                <button
+                  onClick={() => saveMutation.mutate()}
+                  disabled={saveMutation.isPending}
+                  className="p-2 rounded-full hover:bg-muted/50 transition-colors"
+                  title={isSaved ? "Remove from saved" : "Save job"}
+                >
+                  {isSaved
+                    ? <BookmarkCheck className="w-5 h-5 text-primary" />
+                    : <Bookmark className="w-5 h-5 text-muted-foreground hover:text-primary transition-colors" />
+                  }
+                </button>
+              </div>
+
+              {/* Company + Title */}
+              <div className="flex items-center gap-3 sm:gap-6 mb-6 sm:mb-8 relative z-0">
+                <div className={`w-20 h-20 rounded-2xl flex items-center justify-center text-white text-3xl font-bold shadow-lg flex-shrink-0 ${pickColor(companyName)}`}>
+                  {companyName.charAt(0).toUpperCase()}
+                </div>
+                <div>
+                  <h1 className="text-2xl md:text-3xl font-bold tracking-tighter mb-1 text-foreground">
+                    {job.title}
+                  </h1>
+                  <p className="text-base text-muted-foreground font-medium">{companyName}</p>
+                </div>
+              </div>
+
+              {/* Meta badges */}
+              <div className="flex flex-wrap gap-2 sm:gap-3 mb-6 sm:mb-8 relative z-0">
+                <Badge icon={<MapPin className="w-4 h-4" />} text={`${job.city}, ${job.country}`} />
+                <Badge icon={<DollarSign className="w-4 h-4" />} text={formatSalary(job)} />
+                <Badge icon={<Briefcase className="w-4 h-4" />} text={job.category} />
+                <Badge icon={<Clock className="w-4 h-4" />} text={`Posted ${timeAgo(job.jobPostedOn)}`} />
+              </div>
+
+              {/* Description */}
+              <div className="mt-6 relative z-0">
+                <h3 className="text-lg font-semibold tracking-tight text-foreground mb-3">About the Role</h3>
+                <p className="text-muted-foreground leading-relaxed text-base whitespace-pre-line">
+                  {job.description}
+                </p>
+              </div>
+            </motion.div>
+          </div>
+
+          {/* Sidebar */}
+          <div className="md:col-span-1 space-y-6">
+            <motion.div
+              initial={{ opacity: 0, x: 20 }}
+              animate={{ opacity: 1, x: 0 }}
+              transition={{ delay: 0.15 }}
+              className="bg-card border rounded-3xl p-6 sticky top-24"
+            >
+              <Button
+                size="lg"
+                className="w-full text-base font-semibold h-14 rounded-xl shadow-lg mb-3 hover:-translate-y-0.5 transition-transform"
+              >
+                Apply Now
+              </Button>
+
+              <Button
+                size="lg"
+                variant={isSaved ? "default" : "outline"}
+                className="w-full text-base font-semibold h-14 rounded-xl mb-6"
+                onClick={() => saveMutation.mutate()}
+                disabled={saveMutation.isPending}
+              >
+                {saveButtonIcon}
+                {isSaved ? "Saved" : "Save Job"}
+              </Button>
+
+              <div className="pt-6 border-t text-sm space-y-4">
+                <div className="flex justify-between">
+                  <span className="text-muted-foreground">Category</span>
+                  <span className="font-medium text-right max-w-[140px] truncate">{job.category}</span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-muted-foreground">Location</span>
+                  <span className="font-medium text-right">{job.city}, {job.country}</span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-muted-foreground">Salary</span>
+                  <span className="font-medium text-right font-mono">{formatSalary(job)}</span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-muted-foreground">Posted</span>
+                  <span className="font-medium">{timeAgo(job.jobPostedOn)}</span>
+                </div>
+              </div>
+            </motion.div>
+          </div>
+
+        </div>
+      )}
     </div>
   );
 }

@@ -2,20 +2,27 @@ import { Job } from "../models/jobSchema.js";
 import ErrorHandler from "../middlewares/error.js";
 
 export const getAllJobsService = async (query) => {
-  const { keyword, location, salary, sortBy, page = 1, limit = 10 } = query;
-  
+  const { keyword, location, salary, category, sortBy, page = 1, limit = 10 } = query;
+
   const filter = { expired: false };
   if (keyword) {
     filter.title = { $regex: keyword, $options: "i" };
   }
   if (location) {
-    filter.location = { $regex: location, $options: "i" };
+    filter.$or = [
+      { location: { $regex: location, $options: "i" } },
+      { city: { $regex: location, $options: "i" } },
+      { country: { $regex: location, $options: "i" } },
+    ];
   }
   if (salary) {
     filter.$or = [
       { fixedSalary: { $gte: Number(salary) } },
       { salaryFrom: { $gte: Number(salary) } }
     ];
+  }
+  if (category) {
+    filter.category = { $regex: category, $options: "i" };
   }
 
   const sortOptions = {};
@@ -29,6 +36,7 @@ export const getAllJobsService = async (query) => {
   const skip = (Number(page) - 1) * Number(limit);
 
   const jobs = await Job.find(filter)
+    .populate("postedBy", "name")
     .sort(sortOptions)
     .skip(skip)
     .limit(Number(limit))
@@ -87,7 +95,7 @@ export const deleteJobService = async (jobId) => {
 
 export const getSingleJobService = async (jobId) => {
   try {
-    const job = await Job.findById(jobId).lean();
+    const job = await Job.findById(jobId).populate("postedBy", "name").lean();
     if (!job) {
       throw new ErrorHandler("Job not found.", 404);
     }
