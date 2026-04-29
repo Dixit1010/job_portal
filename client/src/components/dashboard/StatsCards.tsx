@@ -6,10 +6,10 @@ import type { Application, SavedJob } from "@/hooks/useDashboardData";
 type Tab = "overview" | "profile" | "applications" | "saved";
 
 interface StatsCardsProps {
-  applications: Application[];
-  savedJobs: SavedJob[];
-  completion: number;
-  onTabChange: (tab: Tab) => void;
+  readonly applications: Application[];
+  readonly savedJobs: SavedJob[];
+  readonly completion: number;
+  readonly onTabChange: (tab: Tab) => void;
 }
 
 export function StatsCards({ applications, savedJobs, completion, onTabChange }: StatsCardsProps) {
@@ -51,7 +51,7 @@ export function StatsCards({ applications, savedJobs, completion, onTabChange }:
           <div className={`w-10 h-10 ${bg} rounded-xl flex items-center justify-center mb-3`}>
             <Icon className={`w-5 h-5 ${color}`} />
           </div>
-          <p className="text-3xl font-bold">{value}</p>
+          <p className="text-2xl sm:text-3xl font-bold">{value}</p>
           <p className="text-sm text-muted-foreground mt-0.5">{label}</p>
         </button>
       ))}

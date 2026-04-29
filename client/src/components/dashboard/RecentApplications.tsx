@@ -21,15 +21,15 @@ function formatDate(dateStr?: string) {
 }
 
 interface RecentApplicationsProps {
-  applications: Application[];
-  onViewAll: () => void;
+  readonly applications: Application[];
+  readonly onViewAll: () => void;
 }
 
 export function RecentApplications({ applications, onViewAll }: RecentApplicationsProps) {
   const recent = applications.slice(0, 3);
 
   return (
-    <div className="bg-card/60 backdrop-blur-md border border-border/50 rounded-2xl p-6">
+    <div className="bg-card/60 backdrop-blur-md border border-border/50 rounded-2xl p-4 sm:p-6">
       <div className="flex items-center justify-between mb-4">
         <h2 className="font-semibold text-base">Recent Applications</h2>
         <button

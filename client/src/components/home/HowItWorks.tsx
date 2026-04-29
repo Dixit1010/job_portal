@@ -55,7 +55,7 @@ export function HowItWorks() {
           initial="hidden"
           whileInView="visible"
           viewport={{ once: true }}
-          className="grid md:grid-cols-3 gap-8 relative"
+          className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-8 relative"
         >
           {STEPS.map((step, i) => (
             <motion.div
@@ -77,7 +77,7 @@ export function HowItWorks() {
 
               {/* Icon circle */}
               <div
-                className={`w-20 h-20 rounded-2xl ${step.iconBg} border ${step.iconBorder} bg-card/50 backdrop-blur-sm flex items-center justify-center mb-6 shadow-sm`}
+                className={`w-16 h-16 sm:w-20 sm:h-20 rounded-2xl ${step.iconBg} border ${step.iconBorder} bg-card/50 backdrop-blur-sm flex items-center justify-center mb-6 shadow-sm`}
               >
                 <step.icon className={`w-9 h-9 ${step.iconColor}`} />
               </div>

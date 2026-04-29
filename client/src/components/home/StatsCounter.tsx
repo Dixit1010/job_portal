@@ -1,8 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import { useInView } from "framer-motion";
-import { motion } from "framer-motion";
+import { useInView, motion } from "framer-motion";
 import { FADE_IN_UP, STAGGER_CONTAINER } from "@/lib/animations";
 
 const STATS = [
@@ -18,10 +17,10 @@ function CounterItem({
   label,
   color,
 }: {
-  value: number;
-  suffix: string;
-  label: string;
-  color: string;
+  readonly value: number;
+  readonly suffix: string;
+  readonly label: string;
+  readonly color: string;
 }) {
   const [count, setCount] = useState(0);
   const ref = useRef<HTMLDivElement>(null);
@@ -47,7 +46,7 @@ function CounterItem({
       variants={FADE_IN_UP}
       className="text-center group"
     >
-      <p className={`text-4xl md:text-5xl font-bold mb-2 ${color} tabular-nums`}>
+      <p className={`text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-bold mb-2 ${color} tabular-nums`}>
         {count.toLocaleString()}{suffix}
       </p>
       <p className="text-sm font-medium text-muted-foreground">{label}</p>
@@ -64,7 +63,7 @@ export function StatsCounter() {
           initial="hidden"
           whileInView="visible"
           viewport={{ once: true }}
-          className="grid grid-cols-2 lg:grid-cols-4 gap-10 md:gap-16"
+          className="grid grid-cols-2 md:grid-cols-4 gap-6 sm:gap-10 md:gap-16"
         >
           {STATS.map((stat) => (
             <CounterItem key={stat.label} {...stat} />

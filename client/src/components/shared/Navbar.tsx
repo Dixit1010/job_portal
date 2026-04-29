@@ -67,7 +67,7 @@ function NavLink({
     <Link
       href={href}
       className={cn(
-        "px-3 py-1.5 rounded-lg text-sm font-medium transition-all duration-200 active:scale-95 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/20",
+        "px-4 py-2 rounded-lg text-sm font-medium transition-all duration-200 active:scale-95 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/20 whitespace-nowrap",
         active
           ? "bg-primary/10 text-primary"
           : "text-muted-foreground hover:bg-primary/5 hover:text-foreground"
@@ -151,7 +151,7 @@ export function Navbar() {
         role="navigation"
         aria-label="Main navigation"
       >
-        <div className="container mx-auto max-w-7xl flex h-16 items-center gap-3 px-4 md:px-6">
+        <div className="w-full flex h-16 items-center gap-3 px-4 sm:px-6 lg:px-10 xl:px-16">
           {/* Logo */}
           <Link
             href="/"
@@ -166,14 +166,14 @@ export function Navbar() {
           </Link>
 
           {/* Desktop nav links */}
-          <div className="hidden md:flex items-center gap-0.5 flex-1">
+          <div className="hidden md:flex items-center gap-1 flex-1">
             {navLinks.map(({ href, label }) => (
               <NavLink key={href} href={href} label={label} pathname={pathname} />
             ))}
           </div>
 
           {/* Desktop right section */}
-          <div className="hidden md:flex items-center gap-1.5 ml-auto shrink-0">
+          <div className="hidden md:flex items-center gap-2 ml-auto shrink-0">
             {/* Search */}
             <form onSubmit={handleSearch} className="relative">
               <div
@@ -204,7 +204,7 @@ export function Navbar() {
                 <Button
                   variant="outline"
                   size="sm"
-                  className="gap-1.5 border-border/70 hover:border-primary/40 ml-1"
+                  className="gap-1.5 border-border/70 hover:border-primary/40"
                 >
                   <PlusCircle className="w-3.5 h-3.5" />
                   Post a Job
@@ -256,7 +256,7 @@ export function Navbar() {
                 onLogout={handleLogout}
               />
             ) : isLoaded && !user ? (
-              <div className="flex items-center gap-1.5 ml-1">
+              <div className="flex items-center gap-1.5">
                 <Link href="/sign-in">
                   <Button variant="ghost" size="sm">
                     Log in
