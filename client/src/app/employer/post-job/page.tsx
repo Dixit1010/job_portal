@@ -66,7 +66,7 @@ export default function PostJobPage() {
   };
 
   return (
-    <div className="container mx-auto px-4 max-w-3xl py-8 min-h-screen">
+    <div className="container mx-auto px-4 max-w-3xl py-6 sm:py-8 min-h-screen">
       <Link href="/employer/dashboard" className="inline-flex items-center text-sm font-medium text-muted-foreground hover:text-primary mb-6 transition-colors">
         <ArrowLeft className="w-4 h-4 mr-2" />
         Back to Dashboard
@@ -75,7 +75,7 @@ export default function PostJobPage() {
       <motion.div 
         initial={{ opacity: 0, scale: 0.98 }}
         animate={{ opacity: 1, scale: 1 }}
-        className="bg-card border rounded-3xl p-8 shadow-sm"
+        className="bg-card border rounded-3xl p-4 sm:p-6 md:p-8 shadow-sm"
       >
         <div className="flex items-center mb-8 pb-6 border-b">
           <div className="bg-primary/10 text-primary p-3 rounded-2xl mr-4">
