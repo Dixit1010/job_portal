@@ -15,7 +15,7 @@ export const postApplicationService = async (applicationData, resumeFile, userId
 
   const cloudinaryResponse = await cloudinary.uploader.upload(
     resumeFile.tempFilePath,
-    { resource_type: "auto" }
+    { resource_type: "raw" }
   );
 
   if (!cloudinaryResponse || cloudinaryResponse.error) {

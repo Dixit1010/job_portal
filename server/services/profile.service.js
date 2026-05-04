@@ -78,7 +78,7 @@ export const uploadResumeService = async (userId, resumeFile) => {
   }
 
   const cloudinaryResponse = await cloudinary.uploader.upload(resumeFile.tempFilePath, {
-    resource_type: "auto",
+    resource_type: "raw",
     folder: "resumes",
   });
 

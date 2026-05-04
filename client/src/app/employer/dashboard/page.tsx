@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { motion } from "framer-motion";
 import { Plus, Users, Edit, Trash2, Loader2, Briefcase, Calendar } from "lucide-react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import api from "@/services/api";
 import { useAuth } from "@clerk/nextjs";
@@ -17,26 +18,57 @@ type PostedJob = {
 
 export default function EmployerDashboard() {
   const [postedJobs, setPostedJobs] = useState<PostedJob[]>([]);
+  const [appCounts, setAppCounts] = useState<Record<string, number>>({});
   const [isLoading, setIsLoading] = useState(true);
+  const [deletingId, setDeletingId] = useState<string | null>(null);
   const { getToken } = useAuth();
+  const router = useRouter();
 
   useEffect(() => {
-    const fetchMyJobs = async () => {
+    const fetchData = async () => {
       try {
         const token = await getToken();
-        const response = await api.get("/job/getmyjobs", {
-          headers: token ? { Authorization: `Bearer ${token}` } : {},
-        });
-        const data = response.data as { myJobs?: PostedJob[] };
-        if (data?.myJobs) setPostedJobs(data.myJobs);
+        const headers = token ? { Authorization: `Bearer ${token}` } : {};
+
+        const [jobsRes, appsRes] = await Promise.all([
+          api.get("/job/getmyjobs", { headers }),
+          api.get("/application/employer/getall", { headers }),
+        ]);
+
+        const jobsData = jobsRes.data as { myJobs?: PostedJob[] };
+        if (jobsData?.myJobs) setPostedJobs(jobsData.myJobs);
+
+        const appsData = appsRes.data as { applications: Array<{ job: { _id: string } | null }> };
+        const counts: Record<string, number> = {};
+        for (const app of appsData.applications || []) {
+          if (app.job?._id) counts[app.job._id] = (counts[app.job._id] || 0) + 1;
+        }
+        setAppCounts(counts);
       } catch (error) {
-        console.error("Failed to fetch employer jobs", error);
+        console.error("Failed to fetch employer data", error);
       } finally {
         setIsLoading(false);
       }
     };
-    fetchMyJobs();
+    fetchData();
   }, [getToken]);
+
+  const handleDelete = async (jobId: string) => {
+    if (!confirm("Are you sure you want to delete this job posting?")) return;
+    setDeletingId(jobId);
+    try {
+      const token = await getToken();
+      await api.delete(`/job/delete/${jobId}`, {
+        headers: token ? { Authorization: `Bearer ${token}` } : {},
+      });
+      setPostedJobs(prev => prev.filter(j => j._id !== jobId));
+    } catch (error) {
+      console.error("Failed to delete job", error);
+      alert("Failed to delete job. Please try again.");
+    } finally {
+      setDeletingId(null);
+    }
+  };
 
   return (
     <div className="container mx-auto px-4 max-w-7xl py-6 sm:py-8 min-h-screen">
@@ -63,10 +95,12 @@ export default function EmployerDashboard() {
       >
         <div className="p-4 sm:p-6 border-b flex justify-between items-center bg-muted/20">
           <h3 className="text-lg sm:text-xl font-bold">Recent Postings</h3>
-          <Button variant="outline" size="sm">View All</Button>
+          <Link href="/employer/applicants">
+            <Button variant="outline" size="sm">View Applicants</Button>
+          </Link>
         </div>
 
-        {/* Desktop table — hidden on mobile */}
+        {/* Desktop table */}
         <div className="hidden md:block overflow-x-auto">
           <table className="w-full text-left border-collapse">
             <thead>
@@ -107,7 +141,7 @@ export default function EmployerDashboard() {
                     <td className="p-4">
                       <div className="flex items-center font-medium">
                         <Users className="w-4 h-4 text-muted-foreground mr-2" />
-                        0
+                        {appCounts[job._id] || 0}
                       </div>
                     </td>
                     <td className="p-4 text-sm text-muted-foreground">
@@ -115,11 +149,27 @@ export default function EmployerDashboard() {
                     </td>
                     <td className="p-4 text-right">
                       <div className="flex justify-end gap-2 text-muted-foreground">
-                        <Button variant="ghost" size="icon" className="h-8 w-8 hover:text-primary">
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          className="h-8 w-8 hover:text-primary"
+                          onClick={() => router.push(`/employer/job/${job._id}/edit`)}
+                          title="Edit job"
+                        >
                           <Edit className="w-4 h-4" />
                         </Button>
-                        <Button variant="ghost" size="icon" className="h-8 w-8 hover:text-destructive">
-                          <Trash2 className="w-4 h-4" />
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          className="h-8 w-8 hover:text-destructive"
+                          onClick={() => handleDelete(job._id)}
+                          disabled={deletingId === job._id}
+                          title="Delete job"
+                        >
+                          {deletingId === job._id
+                            ? <Loader2 className="w-4 h-4 animate-spin" />
+                            : <Trash2 className="w-4 h-4" />
+                          }
                         </Button>
                       </div>
                     </td>
@@ -130,7 +180,7 @@ export default function EmployerDashboard() {
           </table>
         </div>
 
-        {/* Mobile cards — shown only on small screens */}
+        {/* Mobile cards */}
         <div className="md:hidden">
           {isLoading && (
             <div className="p-8 text-center text-muted-foreground">
@@ -167,16 +217,30 @@ export default function EmployerDashboard() {
                         Active
                       </span>
                       <span className="text-xs text-muted-foreground flex items-center gap-1">
-                        <Users className="w-3 h-3" /> 0 applicants
+                        <Users className="w-3 h-3" /> {appCounts[job._id] || 0} applicants
                       </span>
                     </div>
                   </div>
                   <div className="flex gap-1 flex-shrink-0">
-                    <Button variant="ghost" size="icon" className="h-8 w-8 hover:text-primary">
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      className="h-8 w-8 hover:text-primary"
+                      onClick={() => router.push(`/employer/job/${job._id}/edit`)}
+                    >
                       <Edit className="w-4 h-4" />
                     </Button>
-                    <Button variant="ghost" size="icon" className="h-8 w-8 hover:text-destructive">
-                      <Trash2 className="w-4 h-4" />
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      className="h-8 w-8 hover:text-destructive"
+                      onClick={() => handleDelete(job._id)}
+                      disabled={deletingId === job._id}
+                    >
+                      {deletingId === job._id
+                        ? <Loader2 className="w-4 h-4 animate-spin" />
+                        : <Trash2 className="w-4 h-4" />
+                      }
                     </Button>
                   </div>
                 </div>

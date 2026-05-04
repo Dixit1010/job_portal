@@ -16,7 +16,7 @@ const applicationSchema = new mongoose.Schema(
     },
     coverLetter: {
       type: String,
-      required: [true, "Please provide a cover letter!"],
+      default: "",
     },
     phone: {
       type: Number,

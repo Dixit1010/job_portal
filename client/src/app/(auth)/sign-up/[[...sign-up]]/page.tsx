@@ -1,6 +1,7 @@
 "use client";
 
-import { useState } from "react";
+import { useState, Suspense } from "react";
+import { useSearchParams } from "next/navigation";
 import { SignUp } from "@clerk/nextjs";
 import { motion, AnimatePresence } from "framer-motion";
 import { Briefcase, Search, CheckCircle2, ArrowLeft } from "lucide-react";
@@ -38,8 +39,14 @@ const ROLES = [
   },
 ];
 
-export default function SignUpPage() {
-  const [selectedRole, setSelectedRole] = useState<Role | null>(null);
+const VALID_ROLES: Role[] = ["Job Seeker", "Employer"];
+
+function SignUpContent() {
+  const searchParams = useSearchParams();
+  const roleParam = searchParams.get("role") as Role | null;
+  const preselected = roleParam && VALID_ROLES.includes(roleParam) ? roleParam : null;
+
+  const [selectedRole, setSelectedRole] = useState<Role | null>(preselected);
 
   return (
     <div className="min-h-[calc(100vh-4rem)] flex flex-col items-center justify-center p-4 relative overflow-hidden">
@@ -158,5 +165,13 @@ export default function SignUpPage() {
         )}
       </AnimatePresence>
     </div>
+  );
+}
+
+export default function SignUpPage() {
+  return (
+    <Suspense>
+      <SignUpContent />
+    </Suspense>
   );
 }

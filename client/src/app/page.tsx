@@ -213,8 +213,8 @@ export default function Home() {
           >
             {/* Badge */}
             <motion.div variants={FADE_IN_UP} className="flex justify-center mb-6">
-              <span className="inline-flex items-center rounded-full px-3 py-1 text-sm font-medium bg-primary/10 text-primary border border-primary/20">
-                <span className="flex h-2 w-2 rounded-full bg-primary mr-2 animate-pulse" />
+              <span className="inline-flex items-center rounded-full px-3 py-1 text-sm font-medium bg-white/10 text-white border border-white/20 backdrop-blur-sm">
+                <span className="flex h-2 w-2 rounded-full bg-blue-400 mr-2 animate-pulse" />
                 The #1 Job Board for SaaS Professionals
               </span>
             </motion.div>
@@ -222,11 +222,11 @@ export default function Home() {
             {/* Headline */}
             <motion.h1
               variants={FADE_IN_UP}
-              className="text-5xl md:text-6xl lg:text-7xl font-bold tracking-tighter mb-8 text-foreground"
+              className="text-5xl md:text-6xl lg:text-7xl font-bold tracking-tighter mb-8 text-white"
             >
               Find Your True Calling.{" "}
               <br className="hidden md:block" />
-              <span className="text-transparent bg-clip-text bg-gradient-to-r from-primary to-blue-500">
+              <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-cyan-400">
                 Build Your Dream Team.
               </span>
             </motion.h1>
@@ -234,7 +234,7 @@ export default function Home() {
             {/* Subtext */}
             <motion.p
               variants={FADE_IN_UP}
-              className="text-lg md:text-xl text-muted-foreground mb-10 max-w-2xl mx-auto leading-relaxed font-medium"
+              className="text-lg md:text-xl text-white/70 mb-10 max-w-2xl mx-auto leading-relaxed font-medium"
             >
               JobZee connects top-tier tech talent with fast-growing startups and established
               enterprises. Powered by AI matchmaking.
@@ -248,17 +248,17 @@ export default function Home() {
               <Link href="/jobs">
                 <Button
                   size="lg"
-                  className="h-14 px-8 text-base rounded-full shadow-lg hover:shadow-xl transition-all hover:-translate-y-1"
+                  className="h-14 px-8 text-base rounded-full shadow-lg hover:shadow-xl transition-all hover:-translate-y-1 bg-white text-gray-900 hover:bg-white/90"
                 >
                   <Search className="mr-2 h-5 w-5" />
                   Find a Job
                 </Button>
               </Link>
-              <Link href="/sign-up">
+              <Link href="/sign-up?role=Employer">
                 <Button
                   size="lg"
                   variant="outline"
-                  className="h-14 px-8 text-base rounded-full bg-background/50 backdrop-blur-sm border-2 hover:bg-muted transition-all hover:-translate-y-1"
+                  className="h-14 px-8 text-base rounded-full bg-white/10 backdrop-blur-sm border-2 border-white/30 text-white hover:bg-white/20 transition-all hover:-translate-y-1"
                 >
                   <Briefcase className="mr-2 h-5 w-5" />
                   Post a Job
@@ -269,13 +269,13 @@ export default function Home() {
             {/* Social proof pill */}
             <motion.div
               variants={FADE_IN_UP}
-              className="flex items-center justify-center gap-2 mt-8 text-sm text-muted-foreground"
+              className="flex items-center justify-center gap-2 mt-8 text-sm text-white/60"
             >
               <div className="flex -space-x-2">
                 {["A", "B", "C", "D"].map((l) => (
                   <div
                     key={l}
-                    className="w-7 h-7 rounded-full bg-primary/20 border-2 border-background flex items-center justify-center text-[10px] font-bold text-primary"
+                    className="w-7 h-7 rounded-full bg-white/20 border-2 border-white/10 flex items-center justify-center text-[10px] font-bold text-white"
                   >
                     {l}
                   </div>
@@ -286,7 +286,7 @@ export default function Home() {
                   <Star key={i} className="w-3 h-3 fill-amber-400 text-amber-400" />
                 ))}
               </div>
-              <span>Trusted by 50,000+ professionals</span>
+              <span className="text-white/80">Trusted by 50,000+ professionals</span>
             </motion.div>
 
           </motion.div>
