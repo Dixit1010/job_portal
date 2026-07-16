@@ -44,13 +44,17 @@ const userSchema = new mongoose.Schema({
   email: {
     type: String,
     required: [true, "Please enter your Email!"],
+    unique: true,
+    lowercase: true,
+    trim: true,
     validate: [validator.isEmail, "Please provide a valid Email!"],
   },
   phone: {
-    type: Number,
+    type: String,
     required: function () {
       return this.authProvider === "local";
     },
+    trim: true,
   },
   password: {
     type: String,

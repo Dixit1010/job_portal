@@ -9,6 +9,7 @@ import jobRouter from "./routes/jobRoutes.js";
 import userRouter from "./routes/userRoutes.js";
 import applicationRouter from "./routes/applicationRoutes.js";
 import analyticsRouter from "./routes/analyticsRoutes.js";
+import notificationRouter from "./routes/notificationRoutes.js";
 import { config } from "dotenv";
 import cors from "cors";
 import { errorMiddleware } from "./middlewares/error.js";
@@ -56,6 +57,7 @@ app.use("/api/v1/user", userRouter);
 app.use("/api/v1/job", jobRouter);
 app.use("/api/v1/application", applicationRouter);
 app.use("/api/v1/analytics", analyticsRouter);
+app.use("/api/v1/notification", notificationRouter);
 dbConnection();
 
 app.use(errorMiddleware);

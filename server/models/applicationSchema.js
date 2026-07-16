@@ -19,7 +19,8 @@ const applicationSchema = new mongoose.Schema(
       default: "",
     },
     phone: {
-      type: Number,
+      type: String,
+      trim: true,
       required: [true, "Please enter your Phone Number!"],
     },
     address: {
@@ -73,5 +74,8 @@ const applicationSchema = new mongoose.Schema(
   },
   { timestamps: true }
 );
+
+// Prevent the same job seeker from applying to the same job more than once.
+applicationSchema.index({ "applicantID.user": 1, job: 1 }, { unique: true });
 
 export const Application = mongoose.model("Application", applicationSchema);

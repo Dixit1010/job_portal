@@ -1,5 +1,6 @@
 import { Application } from "../models/applicationSchema.js";
 import { Job } from "../models/jobSchema.js";
+import { Notification } from "../models/notificationSchema.js";
 import ErrorHandler from "../middlewares/error.js";
 import cloudinary from "cloudinary";
 
@@ -32,15 +33,29 @@ export const postApplicationService = async (applicationData, resumeFile, userId
 
   const employerID = { user: jobDetails.postedBy, role: "Employer" };
 
-  const application = await Application.create({
-    ...restData,
-    applicantID,
-    employerID,
-    job: jobId,
-    resume: {
-      public_id: cloudinaryResponse.public_id,
-      url: cloudinaryResponse.secure_url,
-    },
+  let application;
+  try {
+    application = await Application.create({
+      ...restData,
+      applicantID,
+      employerID,
+      job: jobId,
+      resume: {
+        public_id: cloudinaryResponse.public_id,
+        url: cloudinaryResponse.secure_url,
+      },
+    });
+  } catch (error) {
+    if (error.code === 11000) {
+      throw new ErrorHandler("You have already applied to this job.", 409);
+    }
+    throw error;
+  }
+
+  await Notification.create({
+    user: jobDetails.postedBy,
+    type: "application_submitted",
+    message: `${restData.name} applied for your job "${jobDetails.title}".`,
   });
 
   return application;
@@ -90,10 +105,17 @@ export const updateApplicationStatusService = async (applicationId, status, role
     applicationId,
     { status },
     { new: true, runValidators: true }
-  );
+  ).populate({ path: "job", select: "title" });
 
   if (!application) {
     throw new ErrorHandler("Application not found!", 404);
   }
+
+  await Notification.create({
+    user: application.applicantID.user,
+    type: "status_updated",
+    message: `Your application for "${application.job?.title ?? "a job"}" was updated to "${status}".`,
+  });
+
   return application;
 };

@@ -7,23 +7,45 @@ export const getPlatformAnalyticsService = async (userRole) => {
     throw new ErrorHandler("Only employers can view analytics.", 403);
   }
 
-  const totalJobs = await Job.countDocuments();
-  const totalApplications = await Application.countDocuments();
-  
-  // Aggregate applications per job
-  const applicationsPerJob = await Application.aggregate([
-    {
-      $group: {
-        _id: "$jobId",
-        count: { $sum: 1 }
-      }
-    },
-    {
-      $sort: { count: -1 }
-    },
-    {
-      $limit: 10
-    }
+  const [totalJobs, totalApplications, applicationsPerJob] = await Promise.all([
+    Job.countDocuments(),
+    Application.countDocuments(),
+    // Aggregate applications per job
+    Application.aggregate([
+      {
+        $group: {
+          _id: "$job",
+          count: { $sum: 1 },
+        },
+      },
+      {
+        $sort: { count: -1 },
+      },
+      {
+        $limit: 10,
+      },
+      {
+        $lookup: {
+          from: "jobs",
+          localField: "_id",
+          foreignField: "_id",
+          as: "jobDetails",
+        },
+      },
+      {
+        $unwind: {
+          path: "$jobDetails",
+          preserveNullAndEmptyArrays: true,
+        },
+      },
+      {
+        $project: {
+          _id: 1,
+          count: 1,
+          title: "$jobDetails.title",
+        },
+      },
+    ]),
   ]);
 
   return {

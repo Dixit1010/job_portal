@@ -1,29 +1,48 @@
 import { Job } from "../models/jobSchema.js";
 import ErrorHandler from "../middlewares/error.js";
 
-export const getAllJobsService = async (query) => {
-  const { keyword, location, salary, category, sortBy, page = 1, limit = 10 } = query;
-
+// Pure function (no DB access) so the location+salary combination logic can be
+// unit tested directly, instead of only through a live-DB integration test.
+export const buildJobFilter = ({ keyword, location, salary, category }) => {
   const filter = { expired: false };
   if (keyword) {
     filter.title = { $regex: keyword, $options: "i" };
   }
-  if (location) {
-    filter.$or = [
-      { location: { $regex: location, $options: "i" } },
-      { city: { $regex: location, $options: "i" } },
-      { country: { $regex: location, $options: "i" } },
-    ];
-  }
-  if (salary) {
-    filter.$or = [
-      { fixedSalary: { $gte: Number(salary) } },
-      { salaryFrom: { $gte: Number(salary) } }
-    ];
-  }
   if (category) {
     filter.category = { $regex: category, $options: "i" };
   }
+
+  // location and salary each need their own $or clause, so they're combined
+  // under $and instead of both writing to filter.$or (which would let one overwrite the other).
+  const andConditions = [];
+  if (location) {
+    andConditions.push({
+      $or: [
+        { location: { $regex: location, $options: "i" } },
+        { city: { $regex: location, $options: "i" } },
+        { country: { $regex: location, $options: "i" } },
+      ],
+    });
+  }
+  if (salary) {
+    andConditions.push({
+      $or: [
+        { fixedSalary: { $gte: Number(salary) } },
+        { salaryFrom: { $gte: Number(salary) } },
+      ],
+    });
+  }
+  if (andConditions.length > 0) {
+    filter.$and = andConditions;
+  }
+
+  return filter;
+};
+
+export const getAllJobsService = async (query) => {
+  const { sortBy, page = 1, limit = 10 } = query;
+
+  const filter = buildJobFilter(query);
 
   const sortOptions = {};
   if (sortBy === "salary") {
@@ -35,14 +54,15 @@ export const getAllJobsService = async (query) => {
 
   const skip = (Number(page) - 1) * Number(limit);
 
-  const jobs = await Job.find(filter)
-    .populate("postedBy", "name")
-    .sort(sortOptions)
-    .skip(skip)
-    .limit(Number(limit))
-    .lean();
-
-  const totalJobs = await Job.countDocuments(filter);
+  const [jobs, totalJobs] = await Promise.all([
+    Job.find(filter)
+      .populate("postedBy", "name")
+      .sort(sortOptions)
+      .skip(skip)
+      .limit(Number(limit))
+      .lean(),
+    Job.countDocuments(filter),
+  ]);
 
   return { 
     jobs, 
